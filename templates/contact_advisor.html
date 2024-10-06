@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacter un Conseiller Médical</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Contacter un Conseiller Médical</h1>
+    <form id="contactForm">
+        <label for="phone_number">Numéro de Téléphone:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+
+        <label for="message">Votre Message:</label>
+        <textarea id="message" name="message" required></textarea>
+
+        <button type="submit">Envoyer Message</button>
+    </form>
+    <p id="response"></p>
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const phone_number = document.getElementById('phone_number').value;
+            const message = document.getElementById('message').value;
+
+            const response = await fetch('/contact_advisor', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    phone_number: phone_number,
+                    message: message
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('response').textContent = result.message || result.error;
+        });
+    </script>
+</body>
+</html>

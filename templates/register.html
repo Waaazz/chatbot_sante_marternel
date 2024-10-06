@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Inscription</h1>
+    <form id="registerForm">
+        <label for="phone_number">Numéro de Téléphone:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+        <button type="submit">S'inscrire</button>
+    </form>
+    <p id="message"></p>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const phone_number = document.getElementById('phone_number').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ phone_number: phone_number })
+            });
+
+            const result = await response.json();
+            document.getElementById('message').textContent = result.message || result.error;
+        });
+    </script>
+</body>
+</html>

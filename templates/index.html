@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil - Chatbot Santé</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        /* Navbar and other customizations */
+        .navbar-icons {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-icons .nav-link {
+            color: white !important;
+            margin-left: 15px;
+        }
+        .second-navbar .nav-item a {
+            color: #333;
+            margin: 0 10px;
+        }
+        .second-navbar {
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+        .navbar-nav {
+            flex-direction: row;
+        }
+        .jumbotron {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .icon-container i {
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Première barre de navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/static/images/logo.png" alt="Logo" style="height: 40px;">
+            </a>
+            <div class="ml-auto navbar-icons">
+                <!-- Icône de recherche -->
+                <form class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Recherche" aria-label="Recherche">
+                </form>
+
+                <!-- Icône de profil -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarProfile" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarProfile">
+                        <a class="dropdown-item" href="/login">Connexion</a>
+                        <a class="dropdown-item" href="/register">Inscription</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Deuxième barre de navigation -->
+    <nav class="navbar navbar-expand-lg second-navbar">
+        <div class="container">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link" href="">Poser une question</a></li>
+                <li class="nav-item"><a class="nav-link" href="/add_reminder">Ajouter un rappel</a></li>
+                <li class="nav-item"><a class="nav-link" href="/appointment">Prendre un rendez-vous</a></li>
+                <li class="nav-item"><a class="nav-link" href="/contact_advisor">Contacter un conseiller médical</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Jumbotron principal -->
+    <div class="jumbotron jumbotron-fluid text-center">
+        <div class="container">
+            <h1 class="display-4">Bienvenue sur le Chatbot Santé Maternelle et Infantile</h1>
+            <p class="lead">Votre partenaire pour la santé prénatale, postnatale, et la nutrition de vos enfants.</p>
+            <a class="btn btn-primary btn-lg" href="/ask" role="button">Commencez Maintenant</a>
+        </div>
+    </div>
+
+    <!-- Section avec les fonctionnalités -->
+    <div class="container mt-5">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="icon-container">
+                    <i class="fas fa-pregnant-woman text-primary"></i>
+                </div>
+                <h3 class="mt-3">Soins prénatals</h3>
+                <p>Recevez des conseils et des rappels pour vos visites prénatales.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-container">
+                    <i class="fas fa-baby text-success"></i>
+                </div>
+                <h3 class="mt-3">Soins postnataux</h3>
+                <p>Suivez les soins de votre bébé après l'accouchement.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="icon-container">
+                    <i class="fas fa-syringe text-danger"></i>
+                </div>
+                <h3 class="mt-3">Vaccinations</h3>
+                <p>Restez à jour avec les vaccinations et recevez des rappels.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center p-4 mt-5">
+        <p>&copy; 2024 Chatbot Santé. Tous droits réservés.</p>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

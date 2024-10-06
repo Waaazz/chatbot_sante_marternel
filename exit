@@ -1,0 +1,17 @@
+[33mcommit e762d1e9b9c314f4794e0e7b6f665a63f984f634[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: aziz woubi <woubiaziz@gmail.com>
+Date:   Fri Sep 20 23:26:46 2024 +0000
+
+    Implémentation du chatbot avec SpaCy Et Notifications avec Twilio
+
+[33mcommit 610158df1c4947041caa4d9ef1e23487de940224[m
+Author: aziz woubi <woubiaziz@gmail.com>
+Date:   Thu Sep 19 23:17:38 2024 +0000
+
+    Ajout du fichier requirements.txt
+
+[33mcommit 10412aacb01190c4e5170a5ad66f523ec31d38c2[m
+Author: aziz woubi <woubiaziz@gmail.com>
+Date:   Thu Sep 19 16:03:02 2024 +0000
+
+    Ajout du fichier .gitignore et configuration pour ignorer venv et pycache

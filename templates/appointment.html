@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prendre un Rendez-vous</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Prendre un Rendez-vous</h1>
+    <form id="appointmentForm">
+        <label for="phone_number">Numéro de Téléphone:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+
+        <label for="appointment_date">Date du Rendez-vous:</label>
+        <input type="date" id="appointment_date" name="appointment_date" required>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <button type="submit">Prendre Rendez-vous</button>
+    </form>
+    <p id="message"></p>
+    <script>
+        document.getElementById('appointmentForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const phone_number = document.getElementById('phone_number').value;
+            const appointment_date = document.getElementById('appointment_date').value;
+            const description = document.getElementById('description').value;
+
+            const response = await fetch('/schedule_appointment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    phone_number: phone_number,
+                    appointment_date: appointment_date,
+                    description: description
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('message').textContent = result.message || result.error;
+        });
+    </script>
+</body>
+</html>

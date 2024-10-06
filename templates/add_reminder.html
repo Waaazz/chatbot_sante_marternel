@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter un Rappel</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Ajouter un Rappel</h1>
+    <form id="reminderForm">
+        <label for="phone_number">Numéro de Téléphone:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+        
+        <label for="reminder_type">Type de Rappel:</label>
+        <input type="text" id="reminder_type" name="reminder_type" required>
+        
+        <label for="reminder_date">Date du Rappel:</label>
+        <input type="date" id="reminder_date" name="reminder_date" required>
+        
+        <button type="submit">Ajouter Rappel</button>
+    </form>
+    <p id="message"></p>
+    <script>
+        document.getElementById('reminderForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const phone_number = document.getElementById('phone_number').value;
+            const reminder_type = document.getElementById('reminder_type').value;
+            const reminder_date = document.getElementById('reminder_date').value;
+
+            const response = await fetch('/add_reminder', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    phone_number: phone_number,
+                    reminder_type: reminder_type,
+                    reminder_date: reminder_date
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('message').textContent = result.message || result.error;
+        });
+    </script>
+</body>
+</html>
