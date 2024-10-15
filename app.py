@@ -1,24 +1,42 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from pymongo import MongoClient
 from config import Config
 import spacy
+from transformers import pipeline
 from twilio.rest import Client
 from datetime import datetime
 import os
 from config import Config
+from bson import ObjectId
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from dotenv import load_dotenv
 
+load_dotenv()
 # Initialiser l'application Flask
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialisation de Flask-Mail
+mail = Mail(app)
 
 # Connexion à MongoDB
 client = MongoClient(app.config['MONGO_URI'])
 db = client['chatbot']
 users_collection = db['users']
 appointments_collection= db['Rappel']
+messages_collection = db['messages']
+conversations_collection = db['conversations']
+
+# Initialisation du serializer avec la clé secrète
+ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+# Initialisation du serializer pour la validation par email
+ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # Charger le modèle de SpaCy pour le français
 nlp = spacy.load('fr_core_news_sm')
+# Charger le modèle de langage pré-entraîné
+nlp_model = pipeline("text2text-generation", model="t5-small")
 
 # Route simple pour afficher la page d'accueil
 @app.route('/')
@@ -33,26 +51,106 @@ def show_register_form():
 # Route pour l'enregistrement des utilisateurs
 @app.route('/register', methods=['POST'])
 def register_user():
-    data = request.json
-    phone_number = data.get('phone_number')
+    data = request.form
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    confirm_password = data.get('confirm_password')
 
-    if not phone_number:
-        return jsonify({"error": "Numéro de téléphone requis"}), 400
+    if not username or not email or not password or not confirm_password:
+        flash('Tous les champs sont requis', 'error')
+        return redirect(url_for('show_register_form'))
 
-    existing_user = users_collection.find_one({'phone_number': phone_number})
+    if password != confirm_password:
+        flash('Les mots de passe ne correspondent pas', 'error')
+        return redirect(url_for('show_register_form'))
+
+    existing_user = users_collection.find_one({'email': email})
 
     if existing_user:
-        return jsonify({"message": "Utilisateur déjà enregistré"}), 200
+        flash('Cet email est déjà enregistré', 'error')
+        return redirect(url_for('show_register_form'))
 
+    # Générer un token de confirmation
+    token = ts.dumps(email, salt='email-confirm-key')
+
+    # Enregistrer l'utilisateur avec le token
     new_user = {
-        "phone_number": phone_number,
-        "consultations": [],
-        "reminders": []
+        "username": username,
+        "email": email,
+        "password": password,
+        "confirmed": False,
+        "confirmation_token": token,
+        "registration_date": datetime.now()
     }
     users_collection.insert_one(new_user)
-    
-    return jsonify({"message": "Utilisateur enregistré avec succès"}), 201
 
+    # Envoyer l'email de confirmation
+    confirmation_link = url_for('confirm_email', token=token, _external=True)
+    send_confirmation_email(username, email, confirmation_link)
+
+    flash('Un email de confirmation a été envoyé à votre adresse. Veuillez le vérifier.', 'success')
+    return redirect(url_for('registration_success', username=username))
+
+# Route pour la page de confirmation de l'inscription
+@app.route('/registration_success/<username>', methods=['GET'])
+def registration_success(username):
+    return render_template('registration_success.html', user={'username': username})
+
+# Route pour confirmer l'email
+@app.route('/confirm/<token>', methods=['GET'])
+def confirm_email(token):
+    try:
+        email = ts.loads(token, salt='email-confirm-key', max_age=86400)  # 24 heures
+    except:
+        flash('Le lien de confirmation est invalide ou a expiré', 'error')
+        return redirect(url_for('show_register_form'))
+
+    user = users_collection.find_one({'email': email})
+
+    if user and not user['confirmed']:
+        users_collection.update_one({'_id': user['_id']}, {'$set': {'confirmed': True}})
+        flash('Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter.', 'success')
+        return redirect(url_for('login'))
+    else:
+        flash('Votre compte est déjà activé. Vous pouvez vous connecter.', 'success')
+        return redirect(url_for('login'))
+
+# Route pour afficher la page de connexion
+@app.route('/login', methods=['GET'])
+def show_login_form():
+    return render_template('login.html')
+
+# Route pour traiter le formulaire de connexion
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.form
+    username = data.get('username')
+    password = data.get('password')
+
+    user = users_collection.find_one({'username': username, 'password': password, 'confirmed': True})
+
+    if user:
+        flash('Connexion réussie', 'success')
+        return redirect(url_for('home'))
+    else:
+        flash('Nom d\'utilisateur ou mot de passe incorrect', 'error')
+        return redirect(url_for('show_login_form'))
+
+
+
+# Fonction pour envoyer l'email de confirmation
+def send_confirmation_email(username, email, confirmation_link):
+    msg = Message('Activation de votre compte', sender=app.config['MAIL_DEFAULT_SENDER'], recipients=[email])
+    msg.body = f"""Bonjour {username},
+
+Veuillez cliquer sur le lien ci-dessous pour activer votre compte :
+
+{confirmation_link}
+
+Cordialement,
+L'équipe de votre site."""
+    mail.send(msg)
 # Route pour afficher la page de questions
 @app.route('/ask', methods=['GET'])
 def show_ask_form():
@@ -65,13 +163,15 @@ def extract_user_data(user_message):
     user_data = {}
     
     for ent in doc.ents:
-        if ent.label_ == "PER":
+        if ent.label_ == "PER":  # Entité pour le nom de personne
             user_data['name'] = ent.text
-        if ent.label_ == "AGE":
+        elif ent.label_ == "AGE":  # Entité pour l'âge
             user_data['age'] = ent.text
-        if "semaines" in user_message:
-            user_data['weeks_pregnant'] = int([t for t in doc if t.is_digit][0].text)
-    
+        elif ent.label_ == "DATE":  # Entité pour les dates (ex. semaines de grossesse)
+            # Extraire les semaines si mentionné dans un contexte de grossesse
+            if "semaine" in ent.text.lower():
+                user_data['weeks_pregnant'] = int([t for t in ent if t.like_num][0].text)
+
     return user_data
 
 
@@ -83,9 +183,37 @@ def chat():
     
     response_message = handle_user_message(user_data, user_message)
     
+    # Enregistrer le message utilisateur dans MongoDB
+    user_message_doc = {
+        "user": user_data.get('name', 'Inconnu'),
+        "text": user_message,
+        "timestamp": datetime.now()
+    }
+    messages_collection.insert_one(user_message_doc)
+
+    # Enregistrer la réponse du bot
+    bot_message_doc = {
+        "user": "Bot",
+        "text": response_message,
+        "timestamp": datetime.now()
+    }
+    messages_collection.insert_one(bot_message_doc)
+
+    # Récupérer les 10 derniers messages pour générer le titre
+    messages = list(messages_collection.find().sort("timestamp", -1).limit(10))
+    
+    # Générer un titre pour le chat
+    chat_title = generate_chat_title(messages, user_message)
+
+    # Enregistrer le chat dans la collection des conversations
+    conversations_collection.insert_one({
+        "title": chat_title,
+        "date": datetime.now(),
+        "messages": messages
+    })
     return jsonify({"message": response_message})
 
-# Fonction pour gérer les messages utilisateur
+
 def handle_user_message(user_data, message):
     """Gérer les différentes requêtes de l'utilisateur en fonction du contexte."""
     # Mots-clés pour les différents sujets liés à la grossesse
@@ -114,16 +242,27 @@ def handle_user_message(user_data, message):
 # Réponses automatiques sur la grossesse, les soins et la nutrition des enfants
 def pregnancy_info(user_data, message):
     """Fournir des informations sur la grossesse, les soins prénatals et postnataux, et la nutrition des enfants."""
-    # Réponses pour la grossesse
+    name = user_data.get('name', 'utilisatrice')
+    weeks_pregnant = user_data.get('weeks_pregnant', None)
+
     if "symptômes" in message:
-        return "Les symptômes courants incluent les nausées matinales, la fatigue, et des maux de tête. Consultez un médecin si vous avez des symptômes sévères."
+        return f"Bonjour {name}, à {weeks_pregnant} semaines de grossesse, les symptômes courants incluent les nausées, la fatigue, les maux de tête, et les douleurs dans le bas du dos. Consultez un médecin si vous ressentez des douleurs sévères, des saignements ou une diminution des mouvements du bébé."
+
     if "alimentation" in message:
-        return "Assurez-vous de consommer des aliments riches en nutriments comme des légumes, des fruits, des protéines maigres et des céréales complètes."
+        return "Pendant la grossesse, il est essentiel d'avoir une alimentation équilibrée. Consommez des fruits, légumes, protéines maigres, céréales complètes, et produits laitiers. Limitez les aliments trop gras ou trop sucrés et évitez l'alcool et le tabac."
+
     if "exercices" in message:
-        return "Des exercices légers comme la marche, le yoga prénatal, ou la natation sont recommandés pendant la grossesse."
-    if "signes de danger" in message:
-        return "Les signes de danger incluent des douleurs abdominales sévères, des saignements ou une diminution des mouvements du bébé. Consultez immédiatement votre médecin."
-    
+        return "Des exercices légers comme la marche, le yoga prénatal, et la natation sont recommandés. Évitez les sports intenses ou les activités à risque. Consultez votre médecin avant de commencer un programme d'exercices."
+
+    if "soins prénatals" in message:
+        return "Il est recommandé de planifier une visite prénatale toutes les 4 semaines pendant les premiers mois de grossesse, puis tous les 15 jours à partir du 7ème mois. Ces visites incluent des échographies, des tests de dépistage, et des bilans sanguins pour surveiller votre santé et celle du bébé."
+
+    if "visites prénatales" in message:
+        return "Les visites prénatales sont cruciales pour surveiller le bon déroulement de la grossesse. Pensez à faire vos visites régulièrement pour garantir la santé du bébé et la vôtre."
+
+    if "préparations pour l'accouchement" in message:
+        return "Il est conseillé de suivre des cours de préparation à l'accouchement, de préparer une valise pour l'hôpital, et de discuter d'un plan de naissance avec votre médecin."
+
     # Soins prénatals
     if "soins prénatals" in message:
         return "Il est recommandé de planifier des visites prénatales toutes les 4 semaines. Les tests de dépistage prénatals incluent les échographies et les analyses de sang."
@@ -172,9 +311,6 @@ def personalized_suggestions(user_data, message):
     if "enfant" in message:
         return "Assurez-vous que votre enfant mange équilibré, avec des fruits, des légumes, et des protéines. Encouragez également l'activité physique quotidienne."
     return "Je peux vous fournir des conseils basés sur la durée de votre grossesse ou l'âge de votre enfant."
-    
-
-
 # Ajoutez d'autres fonctions pour gérer les rendez-vous, les rappels, etc.
 # Route pour afficher la page de Rappel
 @app.route('/add_reminder', methods=['GET'])
@@ -238,11 +374,80 @@ def send_sms(to, message):
 
 
 
-# Route pour afficher la page de Conseiller médical
-@app.route('/contact_advisor', methods=['GET'])
-def show_contact_advisor_form():
-    return render_template('contact_advisor.html')
+# Route pour contacter un conseiller médical
+@app.route('/contact_advisor', methods=['POST'])
+def contact_advisor():
+    data = request.json
+    phone_number = data.get('phone_number')
+    name = data.get('name')
+    email = data.get('email')
+    message = data.get('message')
 
+    if not phone_number or not name or not email or not message:
+        return jsonify({"error": "Numéro de téléphone, nom, email et message requis"}), 400
+
+    advisor_phone = "+22654125637"  # Numéro fictif d'un conseiller médical
+    send_sms(advisor_phone, f"Message de {name} ({phone_number}, {email}): {message}")
+
+    return jsonify({"message": "Message envoyé au conseiller"}), 200
+
+# Route pour récupérer l'historique des messages
+@app.route('/get_history', methods=['GET'])
+def get_history():
+    history = conversations_collection.find().sort("date", -1)  # Tri par ordre chronologique
+    history_list = []
+    for chat in history:
+        # Convertir les ObjectId en chaînes de caractères
+        chat_dict = {
+            "id": str(chat["_id"]),
+            "title": chat["title"],
+            "date": chat["date"].strftime('%Y-%m-%d %H:%M:%S'),
+            "messages": [
+                {
+                    "user": message.get("user", "Inconnu"),  # Utiliser "Inconnu" si la clé 'user' n'existe pas
+                    "text": message.get("text", ""),  # Utiliser une chaîne vide si la clé 'text' n'existe pas
+                    "timestamp": message.get("timestamp", datetime.now()).strftime('%Y-%m-%d %H:%M:%S')  # Utiliser la date actuelle si la clé 'timestamp' n'existe pas
+                }
+                for message in chat["messages"]
+            ]
+        }
+        history_list.append(chat_dict)
+    return jsonify({"history": history_list})
+
+import re
+def generate_chat_title(messages, user_message):
+    """Génère un titre pour le chat en fonction du premier message."""
+    if messages:
+        first_message = messages[0]['text']
+    else:
+        first_message = user_message
+
+    # Utilisez une expression régulière pour extraire les mots clés
+    keywords = re.findall(r'\b\w+\b', first_message)
+    title = ' '.join(keywords[:5])  # Utilisez les 5 premiers mots comme titre
+    return title
+
+# Route pour récupérer un chat spécifique
+@app.route('/get_chat/<chat_id>', methods=['GET'])
+def get_chat(chat_id):
+    chat = conversations_collection.find_one({"_id": ObjectId(chat_id)})
+    if chat:
+        chat_dict = {
+            "id": str(chat["_id"]),
+            "title": chat["title"],
+            "date": chat["date"].strftime('%Y-%m-%d %H:%M:%S'),
+            "messages": [
+                {
+                    "user": message.get("user", "Inconnu"),  # Utiliser "Inconnu" si la clé 'user' n'existe pas
+                    "text": message.get("text", ""),  # Utiliser une chaîne vide si la clé 'text' n'existe pas
+                    "timestamp": message.get("timestamp", datetime.now()).strftime('%Y-%m-%d %H:%M:%S')  # Utiliser la date actuelle si la clé 'timestamp' n'existe pa
+                }
+                for message in chat["messages"]
+            ]
+        }
+        return jsonify(chat_dict)
+    else:
+        return jsonify({"error": "Chat not found"}), 404
 
 # Lancer l'application
 if __name__ == "__main__":

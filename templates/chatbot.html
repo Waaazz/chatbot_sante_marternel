@@ -122,7 +122,7 @@
         }
 
         /* Style pour le formulaire de rappel */
-        .reminder-form {
+        .reminder-form, .contact-form {
             display: none;
             position: absolute;
             top: 60px;
@@ -135,7 +135,6 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             z-index: 10;
             overflow-y: auto; /* Permet le défilement vertical */
-
         }
 
         .form-group {
@@ -148,7 +147,7 @@
             font-weight: bold;
         }
 
-        .form-group input, .form-group select {
+        .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -166,14 +165,119 @@
             top: 10px;
             right: 10px;
         }
+
+        /* Avatar button */
+        .avatar-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 30px;
+        }
+
+        /* Menu du bouton d'avatar */
+        .avatar-menu {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 200px;
+            padding: 10px;
+        }
+
+        .avatar-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .avatar-menu ul li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .avatar-menu ul li:last-child {
+            border-bottom: none;
+        }
+
+        .avatar-menu ul li:hover {
+            background-color: #f5f5f5;
+        }
+
+        .menu-header h4 {
+            margin-bottom: 10px;
+        }
+        /* Style for the history button and form */
+        .history-button {
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .history-form {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            background-color: white;
+            width: 300px;
+            height: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .history-messages {
+            margin-top: 20px;
+        }
+        .history-chat {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+    
+        .history-chat:hover {
+            background-color: #f1f1f1;
+        }
+    
+        .history-chat strong {
+            font-size: 16px;
+            display: block;
+        }
+    
+        .history-chat small {
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-
     <div class="chat-container">
+        <button class="history-button" onclick="toggleHistoryForm()"><i class="fas fa-history"></i></button>
         <div class="chat-header">
             Chatbot Santé
-            <button class="notifications-btn" onclick="toggleReminderForm()">Notifications et rappel</button>
         </div>
         <div class="chat-messages" id="chatbox">
             <!-- Les messages du chatbot et de l'utilisateur seront affichés ici -->
@@ -212,10 +316,62 @@
                     <label for="time">Heure de la notification</label>
                     <input type="time" id="time" name="time">
                 </div>
-                
                 <button type="button" onclick="submitReminder()">Soumettre</button>
+                <!-- Section pour afficher le message -->
+                <div id="message" style="margin-top:20px;"></div>
             </form>
         </div>
+
+        <!-- Formulaire pour contacter un conseiller médical -->
+        <div class="contact-form" id="contactForm">
+            <button class="close-btn" onclick="toggleContactForm()">X</button>
+            <h3>Contactez un Conseiller Médical</h3>
+            <form id="contactFormContent">
+                <div class="form-group">
+                    <label for="phone_number">Numéro de téléphone</label>
+                    <input type="text" id="phone_number" name="phone_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Nom</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required></textarea>
+                </div>
+                <button type="button" onclick="submitContact()">Soumettre</button>          
+            </form>
+            <!-- Div pour afficher le message de confirmation ou d'erreur -->
+            <div id="contactMessage" style="margin-top: 10px;"></div>
+        </div>
+        <!-- Section pour l'historique du chat -->
+        <div class="history-form" id="historyForm">
+            <button class="close-btn" onclick="toggleHistoryForm()">X</button>
+            <h3>Historique du Chat</h3>
+            <div id="historyMessages" style="margin-top:20px;"></div>
+            <button onclick="startNewChat()">Créer un nouveau chat</button>
+        </div>
+    </div>
+
+    <!-- Avatar button -->
+    <div class="avatar-button" id="avatarButton" onclick="toggleAvatarMenu()">
+        <i class="fas fa-user-md"></i>
+    </div>
+    <!-- Menu du bouton d'avatar -->
+    <div class="avatar-menu" id="avatarMenu">
+        <div class="menu-header">
+            <h4>Options</h4>
+            <ul>
+                <li onclick="toggleReminderForm()">Notifications et rappel</li>
+                <li onclick="toggleContactForm()">Contactez un Conseiller Médical</li>
+            </ul>
+        </div>
+
+        
     </div>
 
     <!-- jQuery -->
@@ -273,10 +429,12 @@
             const time = form.time.value;
             const phone = form.phone.value;
 
-            // Vérification de base (ajustez en fonction des besoins)
+            // Vérification de base
             if (!type || !date || !phone) {
-                alert('Veuillez remplir tous les champs.');
-                return;
+                const messageDiv = document.getElementById('message');
+                messageDiv.innerText = 'Erreur: Veuillez remplir tous les champs.'; // Afficher le message d'erreur
+                messageDiv.style.color = 'red'; // Appliquer une couleur rouge pour le message d'erreur
+                return; // Arrêter l'exécution ici
             }
 
             // Soumission du formulaire à l'API Flask
@@ -285,17 +443,137 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, type, date, time, phone,})
+                body: JSON.stringify({ name, type, date, time, phone })
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);  // Afficher un message de confirmation
-                toggleReminderForm();  // Fermer le formulaire après soumission
+                // Afficher le message de retour
+                const messageDiv = document.getElementById('message');
+                messageDiv.innerText = data.message;
+                document.getElementById('contactFormContent').reset(); 
+                messageDiv.style.color = 'green'; // Afficher le message en vert pour confirmation
+                form.reset(); // Réinitialiser le formulaire après soumission
+            
             })
             .catch(error => {
                 console.error('Erreur:', error);
             });
         }
+
+        // Fonction pour basculer le menu d'avatar
+        function toggleAvatarMenu() {
+            const menu = document.getElementById('avatarMenu');
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+        }  
+
+        // Fonction pour basculer l'affichage du formulaire de contact
+        function toggleContactForm() {
+            const form = document.getElementById('contactForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Fonction pour soumettre le formulaire de contact
+        function submitContact() {
+            const form = document.getElementById('contactFormContent');
+            const phone_number = form.phone_number.value;
+            const name = form.name.value;
+            const email = form.email.value;
+            const message = form.message.value;
+
+            // Vérification de base (ajustez en fonction des besoins)
+            if (!phone_number || !name || !email || !message) {
+                const contactMessageDiv = document.getElementById('contactMessage');
+                contactMessageDiv.innerText = 'Erreur: Veuillez remplir tous les champs.';
+                contactMessageDiv.style.color = 'red';
+                return;
+            }
+
+            // Soumission du formulaire à l'API Flask
+            fetch('/contact_advisor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone_number, name, email, message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Afficher le message de confirmation
+                const contactMessageDiv = document.getElementById('contactMessage');
+                contactMessageDiv.innerText = data.message;
+                contactMessageDiv.style.color = 'green'; // Afficher le message en vert pour confirmation
+                form.reset(); // Réinitialiser le formulaire après soumission
+            
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        // Fonction pour basculer l'affichage de l'historique
+        function toggleHistoryForm() {
+            const form = document.getElementById('historyForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            loadHistory();
+        }
+        // Fonction pour charger l'historique des messages depuis l'API
+        // Fonction pour charger l'historique des messages depuis l'API
+        function loadHistory() {
+            fetch('/get_history')
+            .then(response => response.json())
+            .then(data => {
+                const historyMessages = document.getElementById('historyMessages');
+                historyMessages.innerHTML = '';  // Réinitialiser l'affichage avant d'ajouter les nouveaux messages
+
+                // Vérifier si l'historique contient des messages
+                if (data.history && data.history.length > 0) {
+                    data.history.forEach(chat => {
+                        // Créer un élément de message pour chaque chat dans l'historique
+                        const chatElement = document.createElement('div');
+                        chatElement.classList.add('history-chat');
+                        chatElement.innerHTML = `<strong>${chat.title}</strong> 
+        <small>${chat.date}</small>`;
+                        chatElement.onclick = function() {
+                            loadChat(chat.id);
+                        };
+                        historyMessages.appendChild(chatElement);
+                    });
+                } else {
+                    historyMessages.innerHTML = '<p>Aucun historique trouvé.</p>';  // Message si l'historique est vide
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération de l\'historique:', error);
+            });
+        }
+
+        // Fonction pour charger un chat spécifique
+        function loadChat(chatId) {
+            fetch(`/get_chat/${chatId}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatbox = document.getElementById('chatbox');
+                chatbox.innerHTML = '';  // Réinitialiser le chat
+
+                data.messages.forEach(message => {
+                    const chatMessage = document.createElement('div');
+                    chatMessage.classList.add('chat-message');
+                    chatMessage.innerHTML = `<div class="message-bubble ${message.user === 'Bot' ? 'bot' : 'user'}">${message.text}</div>`;
+                    chatbox.appendChild(chatMessage);
+                });
+
+                chatbox.scrollTop = chatbox.scrollHeight; // Scroll automatique vers le bas
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération du chat:', error);
+            });
+        }
+        // Fonction pour créer un nouveau chat
+        function startNewChat() {
+            document.getElementById('chatbox').innerHTML = ''; // Réinitialiser le chat
+            toggleHistoryForm(); // Fermer l'historique
+        }
+        
     </script>
 
 </body>
