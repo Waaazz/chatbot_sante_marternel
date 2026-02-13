@@ -9,14 +9,14 @@ import os
 port = os.getenv("PORT", "8000")
 bind = os.getenv("GUNICORN_BIND", f"0.0.0.0:{port}")
 
-# Nombre de workers (2-4 x CPU cores)
-workers = int(os.getenv("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
+# Nombre de workers (limité à 2 pour les tiers gratuits type Render)
+workers = int(os.getenv("WEB_CONCURRENCY", os.getenv("GUNICORN_WORKERS", 2)))
 
 # Type de worker
 worker_class = "gthread"
 
 # Threads par worker
-threads = int(os.getenv("GUNICORN_THREADS", 4))
+threads = int(os.getenv("GUNICORN_THREADS", 2))
 
 # Timeout en secondes
 timeout = int(os.getenv("GUNICORN_TIMEOUT", 120))

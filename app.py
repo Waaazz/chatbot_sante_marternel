@@ -201,7 +201,10 @@ def register_user():
         flash('Un email de confirmation a été envoyé à votre adresse. Veuillez le vérifier.', 'success')
     except Exception:
         logger.warning("Échec de l'envoi de l'email de confirmation pour %s", email)
-        flash('Le compte a été créé mais l\'email de confirmation n\'a pas pu être envoyé. Veuillez réessayer ou contacter le support.', 'error')
+        # Auto-confirmer le compte si l'email ne peut pas être envoyé
+        users_collection.update_one({'email': email}, {'$set': {'confirmed': True}})
+        flash('Votre compte a été créé et activé automatiquement. Vous pouvez vous connecter.', 'success')
+        return redirect(url_for('show_login_form'))
     return redirect(url_for('registration_success', username=username))
 
 
