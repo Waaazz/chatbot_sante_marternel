@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Chatbot Santé</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: #f4f6f9;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+        .admin-header h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        .admin-header p {
+            margin: 5px 0 0;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+        .admin-nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .admin-nav a:hover { opacity: 1; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .stat-card .icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+        }
+        .stat-card .icon.blue { background: linear-gradient(135deg, #0077b6, #00b4d8); }
+        .stat-card .icon.green { background: linear-gradient(135deg, #2d9c4a, #4caf50); }
+        .stat-card .icon.purple { background: linear-gradient(135deg, #7b1fa2, #ab47bc); }
+        .stat-card .icon.orange { background: linear-gradient(135deg, #e65100, #ff9800); }
+        .stat-card .info h3 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stat-card .info p {
+            margin: 2px 0 0;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .users-section {
+            padding: 0 40px 40px;
+        }
+        .users-section h2 {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .users-table {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .users-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table th {
+            background: #f8f9fa;
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #eee;
+        }
+        .users-table td {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            color: #444;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .users-table tr:last-child td { border-bottom: none; }
+        .badge-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .badge-active { background: #e8f5e9; color: #2e7d32; }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-admin { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1><i class="fas fa-shield-alt mr-2"></i>Panel d'administration</h1>
+        <p>Gestion du chatbot Santé Maternelle</p>
+        <div class="admin-nav">
+            <a href="/"><i class="fas fa-home mr-1"></i> Accueil</a>
+            <a href="/ask"><i class="fas fa-comments mr-1"></i> Chatbot</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt mr-1"></i> Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="icon blue"><i class="fas fa-users"></i></div>
+            <div class="info">
+                <h3>{{ stats.total_users }}</h3>
+                <p>Utilisateurs inscrits</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon green"><i class="fas fa-user-check"></i></div>
+            <div class="info">
+                <h3>{{ stats.total_confirmed }}</h3>
+                <p>Comptes confirmés</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon purple"><i class="fas fa-comments"></i></div>
+            <div class="info">
+                <h3>{{ stats.total_conversations }}</h3>
+                <p>Conversations</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon orange"><i class="fas fa-bell"></i></div>
+            <div class="info">
+                <h3>{{ stats.total_reminders }}</h3>
+                <p>Rappels créés</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="users-section">
+        <h2><i class="fas fa-user-friends mr-2"></i>Derniers utilisateurs inscrits</h2>
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom d'utilisateur</th>
+                        <th>Email</th>
+                        <th>Date d'inscription</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.username }}</strong></td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.registration_date }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge-status badge-admin">Admin</span>
+                            {% elif user.confirmed %}
+                                <span class="badge-status badge-active">Actif</span>
+                            {% else %}
+                                <span class="badge-status badge-pending">En attente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

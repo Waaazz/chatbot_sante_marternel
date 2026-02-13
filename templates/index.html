@@ -3,118 +3,652 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil - Chatbot Santé</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-
-    <!-- Custom Styles -->
+    <title>Accueil - Chatbot Santé Maternelle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Navbar and other customizations */
-        .navbar-icons {
+        :root {
+            --primary: #00b4d8;
+            --primary-dark: #0096c7;
+            --secondary: #e91e8c;
+            --accent: #ff6b9d;
+            --dark: #1a1a2e;
+            --light: #f8f9ff;
+            --gradient-1: linear-gradient(135deg, #00b4d8 0%, #0096c7 50%, #0077b6 100%);
+            --gradient-2: linear-gradient(135deg, #e91e8c 0%, #ff6b9d 100%);
+            --gradient-hero: linear-gradient(135deg, #0077b6 0%, #00b4d8 40%, #48cae4 70%, #90e0ef 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            overflow-x: hidden;
+            background-color: var(--light);
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            padding: 15px 0;
+            transition: all 0.3s ease;
+            background: transparent !important;
+            position: absolute;
+            width: 100%;
+            z-index: 1000;
+        }
+        .navbar.scrolled {
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .navbar-brand img {
+            height: 45px;
+            filter: brightness(0) invert(1);
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+        .btn-nav {
+            background: var(--gradient-2);
+            color: white !important;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 24px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 30, 140, 0.4);
+            color: white !important;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: var(--gradient-hero);
+            min-height: 100vh;
             display: flex;
             align-items: center;
+            position: relative;
+            overflow: hidden;
         }
-        .navbar-icons .nav-link {
-            color: white !important;
-            margin-left: 15px;
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
         }
-        .second-navbar .nav-item a {
-            color: #333;
-            margin: 0 10px;
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite reverse;
         }
-        .second-navbar {
-            background-color: #f8f9fa;
-            padding: 10px;
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
         }
-        .navbar-nav {
-            flex-direction: row;
+        .hero-content {
+            position: relative;
+            z-index: 2;
         }
-        .jumbotron {
-            background-color: #17a2b8;
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+        .hero h1 span {
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 35px;
+            max-width: 500px;
+        }
+        .btn-hero {
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .btn-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            color: var(--secondary);
+        }
+        .btn-hero i {
+            margin-left: 8px;
+            transition: transform 0.3s;
+        }
+        .btn-hero:hover i {
+            transform: translateX(5px);
+        }
+        .hero-image {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        .hero-icon-main {
+            font-size: 12rem;
+            color: rgba(255,255,255,0.15);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.05); opacity: 0.25; }
+        }
+        .hero-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-item h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
             color: white;
         }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+        .stat-item p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            margin: 0;
         }
-        .icon-container i {
-            font-size: 3rem;
+
+        /* ===== FEATURES SECTION ===== */
+        .features {
+            padding: 100px 0;
+            background: var(--light);
+        }
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        .section-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 60px;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 180, 216, 0.15);
+        }
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 2rem;
+            color: white;
+        }
+        .feature-icon.pink { background: var(--gradient-2); }
+        .feature-icon.blue { background: var(--gradient-1); }
+        .feature-icon.green { background: linear-gradient(135deg, #2dce89 0%, #26c281 100%); }
+        .feature-icon.orange { background: linear-gradient(135deg, #fb6340 0%, #fbb140 100%); }
+        .feature-card h4 {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        .feature-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .how-it-works {
+            padding: 100px 0;
+            background: white;
+        }
+        .step-card {
+            text-align: center;
+            padding: 30px;
+            position: relative;
+        }
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-1);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .step-card h5 {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .step-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .step-connector {
+            position: absolute;
+            top: 55px;
+            right: -15%;
+            width: 30%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta-section {
+            padding: 80px 0;
+            background: var(--gradient-hero);
+            text-align: center;
+        }
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .cta-section p {
+            color: rgba(255,255,255,0.85);
+            font-size: 1.15rem;
+            margin-bottom: 35px;
+        }
+        .btn-cta {
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 45px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            color: var(--secondary);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--dark);
+            color: rgba(255,255,255,0.7);
+            padding: 60px 0 30px;
+        }
+        .footer h5 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .footer a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: all 0.3s;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .footer a:hover {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 25px;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .social-icons a {
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white !important;
+            transition: all 0.3s;
+        }
+        .social-icons a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        /* ===== FLASH MESSAGES ===== */
+        .flash-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        .flash-container .alert {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-stats { gap: 15px; }
+            .stat-item h3 { font-size: 1.3rem; }
+            .section-title { font-size: 1.7rem; }
+            .step-connector { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Première barre de navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg" id="mainNav">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="/static/images/SantéMaternel.png" alt="Logo" style="height: 40px;">
+                <img src="/static/images/SantéMaternel.PNG" alt="Logo">
             </a>
-            <div class="ml-auto navbar-icons">
-                
-
-                <!-- Icône de profil -->
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarProfile" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-user"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarProfile">
-                        <a class="dropdown-item" href="/login">Connexion</a>
-                        <a class="dropdown-item" href="/register">Inscription</a>
-                    </div>
-                </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navContent">
+                <span style="color:white;font-size:1.5rem;"><i class="fas fa-bars"></i></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Fonctionnalités</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how">Comment ça marche</a></li>
+                    {% if session.get('user_id') %}
+                    <li class="nav-item"><a class="nav-link" href="/ask"><i class="fas fa-comments"></i> Chatbot</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ session.get('username') }}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="border:none;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);">
+                            <a class="dropdown-item" href="/add_reminder"><i class="fas fa-bell mr-2"></i>Rappels</a>
+                            <a class="dropdown-item" href="/contact"><i class="fas fa-user-md mr-2"></i>Conseiller</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt mr-2"></i>Déconnexion</a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/login">Connexion</a></li>
+                    <li class="nav-item ml-2"><a class="btn btn-nav" href="/register">Inscription</a></li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Jumbotron principal -->
-    <div class="jumbotron jumbotron-fluid text-center">
+    <!-- FLASH MESSAGES -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
         <div class="container">
-            <h1 class="display-4">Bienvenue sur le Chatbot Santé Maternelle et Infantile</h1>
-            <p class="lead">Votre partenaire pour la santé prénatale, postnatale, et la nutrition de vos enfants.</p>
-            <a class="btn btn-primary btn-lg" href="/ask" role="button">Commencez Maintenant</a>
-        </div>
-    </div>
-
-    <!-- Section avec les fonctionnalités -->
-    <div class="container mt-5">
-        <div class="row text-center">
-            <div class="col-md-4">
-                <div class="icon-container">
-                    <i class="fas fa-pregnant-woman text-primary"></i>
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1>Votre compagnon pour une <span>maternité sereine</span></h1>
+                    <p>Accédez à des conseils personnalisés sur la grossesse, les soins prénatals et postnataux, et la nutrition de vos enfants, 24h/24.</p>
+                    <a href="/ask" class="btn btn-hero">
+                        Commencer maintenant <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <h3>24/7</h3>
+                            <p>Disponible</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>100%</h3>
+                            <p>Gratuit</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>SMS</h3>
+                            <p>Rappels</p>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="mt-3">Soins prénatals</h3>
-                <p>Recevez des conseils et des rappels pour vos visites prénatales.</p>
-            </div>
-            <div class="col-md-4">
-                <div class="icon-container">
-                    <i class="fas fa-baby text-success"></i>
+                <div class="col-lg-6 hero-image d-none d-lg-block">
+                    <i class="fas fa-hand-holding-heart hero-icon-main"></i>
                 </div>
-                <h3 class="mt-3">Soins postnataux</h3>
-                <p>Suivez les soins de votre bébé après l'accouchement.</p>
-            </div>
-            <div class="col-md-4">
-                <div class="icon-container">
-                    <i class="fas fa-syringe text-danger"></i>
-                </div>
-                <h3 class="mt-3">Vaccinations</h3>
-                <p>Restez à jour avec les vaccinations et recevez des rappels.</p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center p-4 mt-5">
-        <p>&copy; 2024 Chatbot Santé. Tous droits réservés.</p>
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title fade-up">Nos fonctionnalités</h2>
+                <p class="section-subtitle fade-up">Tout ce dont vous avez besoin pour une grossesse et une maternité en bonne santé</p>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card fade-up">
+                        <div class="feature-icon pink">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h4>Soins Prénatals</h4>
+                        <p>Conseils personnalisés pour chaque trimestre de votre grossesse et rappels de visites.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card fade-up">
+                        <div class="feature-icon blue">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <h4>Soins Postnataux</h4>
+                        <p>Accompagnement après l'accouchement pour la mère et le nouveau-né.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card fade-up">
+                        <div class="feature-icon green">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <h4>Vaccinations</h4>
+                        <p>Rappels de vaccinations par SMS pour ne jamais manquer un rendez-vous.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card fade-up">
+                        <div class="feature-icon orange">
+                            <i class="fas fa-apple-alt"></i>
+                        </div>
+                        <h4>Nutrition</h4>
+                        <p>Conseils nutritionnels adaptés à chaque étape de la grossesse et de l'enfance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works" id="how">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title fade-up">Comment ça marche ?</h2>
+                <p class="section-subtitle fade-up">En 3 étapes simples</p>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="step-card fade-up">
+                        <div class="step-number">1</div>
+                        <h5>Créez votre compte</h5>
+                        <p>Inscrivez-vous gratuitement en quelques secondes pour accéder au chatbot.</p>
+                        <div class="step-connector d-none d-md-block"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card fade-up">
+                        <div class="step-number">2</div>
+                        <h5>Posez vos questions</h5>
+                        <p>Discutez avec notre chatbot spécialisé en santé maternelle et infantile.</p>
+                        <div class="step-connector d-none d-md-block"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card fade-up">
+                        <div class="step-number">3</div>
+                        <h5>Recevez des rappels</h5>
+                        <p>Configurez des rappels SMS pour vos visites et vaccinations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="fade-up">Prête à commencer ?</h2>
+            <p class="fade-up">Rejoignez des milliers de mamans qui utilisent notre chatbot pour une maternité sereine.</p>
+            <a href="/register" class="btn btn-cta fade-up">Créer un compte gratuit <i class="fas fa-arrow-right ml-2"></i></a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5>Chatbot Santé Maternelle</h5>
+                    <p>Votre assistant santé maternelle et infantile, disponible 24h/24 pour vous accompagner.</p>
+                    <div class="social-icons mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h5>Navigation</h5>
+                    <a href="/">Accueil</a>
+                    <a href="/ask">Chatbot</a>
+                    <a href="/register">Inscription</a>
+                    <a href="/login">Connexion</a>
+                </div>
+                <div class="col-lg-3 col-md-4 mb-4">
+                    <h5>Fonctionnalités</h5>
+                    <a href="/ask">Soins prénatals</a>
+                    <a href="/ask">Soins postnataux</a>
+                    <a href="/add_reminder">Rappels SMS</a>
+                    <a href="/contact">Conseiller médical</a>
+                </div>
+                <div class="col-lg-3 col-md-4 mb-4">
+                    <h5>Contact</h5>
+                    <p><i class="fas fa-envelope mr-2"></i>woubiaziz@gmail.com</p>
+                    <p><i class="fas fa-map-marker-alt mr-2"></i>Burkina Faso</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Chatbot Santé Maternelle. Tous droits réservés.</p>
+            </div>
+        </div>
     </footer>
 
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const nav = document.getElementById('mainNav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
 
-    <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.flash-container .alert').forEach(el => {
+                $(el).alert('close');
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
