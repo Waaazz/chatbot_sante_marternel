@@ -182,30 +182,20 @@ def register_user():
     # Générer un token de confirmation
     token = ts.dumps(email, salt='email-confirm-key')
 
-    # Enregistrer l'utilisateur avec mot de passe haché
+    # Enregistrer l'utilisateur avec mot de passe haché (compte activé directement)
     new_user = {
         "username": username,
         "email": email,
         "password": generate_password_hash(password),
-        "confirmed": False,
+        "confirmed": True,
         "confirmation_token": token,
         "registration_date": datetime.now()
     }
     users_collection.insert_one(new_user)
     logger.info("Nouvel utilisateur inscrit : %s", username)
 
-    # Envoyer l'email de confirmation
-    confirmation_link = url_for('confirm_email', token=token, _external=True)
-    try:
-        send_confirmation_email(username, email, confirmation_link)
-        flash('Un email de confirmation a été envoyé à votre adresse. Veuillez le vérifier.', 'success')
-    except Exception:
-        logger.warning("Échec de l'envoi de l'email de confirmation pour %s", email)
-        # Auto-confirmer le compte si l'email ne peut pas être envoyé
-        users_collection.update_one({'email': email}, {'$set': {'confirmed': True}})
-        flash('Votre compte a été créé et activé automatiquement. Vous pouvez vous connecter.', 'success')
-        return redirect(url_for('show_login_form'))
-    return redirect(url_for('registration_success', username=username))
+    flash('Votre compte a été créé avec succès. Vous pouvez vous connecter.', 'success')
+    return redirect(url_for('show_login_form'))
 
 
 # Route pour la page de confirmation de l'inscription
