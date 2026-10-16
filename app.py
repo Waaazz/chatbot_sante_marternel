@@ -649,12 +649,30 @@ def set_reminder():
     return jsonify({'message': 'Rappel enregistré, mais le SMS n\'a pas pu être envoyé. Vérifiez le numéro de téléphone.'})
 
 
+def normalize_phone(phone):
+    """Mettre un numéro au format international E.164 exigé par Twilio.
+    Un numéro burkinabè local à 8 chiffres reçoit l'indicatif +226."""
+    phone = re.sub(r'[\s\-.()]', '', phone or '')
+    if phone.startswith('00'):
+        phone = '+' + phone[2:]
+    if re.fullmatch(r'\d{8}', phone):
+        phone = '+226' + phone
+    elif re.fullmatch(r'226\d{8}', phone):
+        phone = '+' + phone
+    return phone
+
+
 def send_sms(to, message):
     """Envoyer un SMS via Twilio. Retourne True si envoyé, False sinon."""
     account_sid = Config.TWILIO_ACCOUNT_SID
     auth_token = Config.TWILIO_AUTH_TOKEN
     twilio_number = Config.TWILIO_PHONE_NUMBER
 
+    if not all([account_sid, auth_token, twilio_number]):
+        logger.error("Envoi SMS impossible : variables TWILIO_* manquantes")
+        return False
+
+    to = normalize_phone(to)
     try:
         twilio_client = Client(account_sid, auth_token)
         twilio_client.messages.create(
@@ -664,7 +682,9 @@ def send_sms(to, message):
         )
         return True
     except Exception as e:
-        logger.error("Erreur d'envoi SMS : %s", e)
+        # Le code Twilio (ex. 21660, 21608) permet d'identifier la cause exacte
+        logger.error("Erreur d'envoi SMS vers %s (code Twilio %s) : %s",
+                     to[:6] + '***', getattr(e, 'code', None), e)
         return False
 
 
