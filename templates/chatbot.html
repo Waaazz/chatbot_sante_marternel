@@ -1,828 +1,387 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Santé</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #00b4d8;
-            --primary-dark: #0096c7;
-            --secondary: #e91e8c;
-            --dark: #1a1a2e;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e8f4f8 50%, #fce4ec 100%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-        }
+{% extends 'base.html' %}
+{% block title %}Chatbot{% endblock %}
+{% block body_class %}chat-body{% endblock %}
 
-        /* ===== SIDEBAR HISTORY ===== */
-        .sidebar {
-            display: none;
-            position: fixed;
-            left: 0; top: 0;
-            width: 300px;
-            height: 100vh;
-            background: white;
-            box-shadow: 5px 0 30px rgba(0,0,0,0.1);
-            z-index: 100;
-            padding: 25px 20px;
-            overflow-y: auto;
-            animation: slideRight 0.3s ease;
-        }
-        @keyframes slideRight {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(0); }
-        }
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .sidebar-header h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
-        .sidebar-close {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            border: none;
-            background: #f5f5f5;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #666;
-            transition: all 0.2s;
-        }
-        .sidebar-close:hover { background: #eee; }
-        .history-item {
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #f0f0f0;
-        }
-        .history-item:hover {
-            background: linear-gradient(135deg, rgba(0,180,216,0.05), rgba(233,30,140,0.05));
-            border-color: rgba(0,180,216,0.2);
-        }
-        .history-item strong {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--dark);
-            display: block;
-            margin-bottom: 3px;
-        }
-        .history-item small { color: #999; font-size: 0.75rem; }
-        .btn-new-chat {
-            width: 100%;
-            padding: 12px;
-            border: 2px dashed #ddd;
-            border-radius: 12px;
-            background: transparent;
-            color: #999;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Poppins', sans-serif;
-        }
-        .btn-new-chat:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: rgba(0,180,216,0.05);
-        }
+{% block body %}
+<div class="chat-app" id="chatApp">
 
-        /* ===== CHAT CONTAINER ===== */
-        .chat-wrapper {
-            width: 480px;
-            height: 620px;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            overflow: hidden;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Header */
-        .chat-header {
-            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-btn {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            border: none;
-            background: rgba(255,255,255,0.15);
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        .header-btn:hover { background: rgba(255,255,255,0.25); }
-        .chat-header-info {
-            flex: 1;
-        }
-        .chat-header-info h4 {
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 0;
-        }
-        .chat-header-info span {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.75rem;
-        }
-        .header-avatar {
-            width: 40px; height: 40px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.1rem;
-        }
-
-        /* Messages */
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: #fafbfe;
-        }
-        .chat-messages::-webkit-scrollbar { width: 5px; }
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #ddd;
-            border-radius: 10px;
-        }
-        .msg { display: flex; align-items: flex-end; gap: 8px; }
-        .msg.user { flex-direction: row-reverse; }
-        .msg-avatar {
-            width: 30px; height: 30px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            flex-shrink: 0;
-        }
-        .msg.bot .msg-avatar {
-            background: linear-gradient(135deg, #00b4d8, #0096c7);
-            color: white;
-        }
-        .msg.user .msg-avatar {
-            background: linear-gradient(135deg, #e91e8c, #ff6b9d);
-            color: white;
-        }
-        .msg-bubble {
-            max-width: 75%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 0.88rem;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-        .msg.bot .msg-bubble {
-            background: white;
-            color: #333;
-            border-bottom-left-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .msg.user .msg-bubble {
-            background: linear-gradient(135deg, #00b4d8, #0096c7);
-            color: white;
-            border-bottom-right-radius: 6px;
-        }
-
-        /* Typing indicator */
-        .typing { display: none; }
-        .typing .msg-bubble {
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            padding: 14px 20px;
-        }
-        .typing-content {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .typing-text {
-            font-size: 0.8rem;
-            color: #999;
-            font-style: italic;
-        }
-        .typing-dots {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .typing-dots span {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #ccc;
-            animation: typingBounce 1.4s infinite;
-        }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); background: #ccc; }
-            30% { transform: translateY(-8px); background: var(--primary); }
-        }
-
-        /* Input */
-        .chat-input {
-            padding: 16px 20px;
-            background: white;
-            border-top: 1px solid #f0f0f0;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .chat-input input {
-            flex: 1;
-            border: 2px solid #eee;
-            border-radius: 14px;
-            padding: 12px 18px;
-            font-size: 0.9rem;
-            font-family: 'Poppins', sans-serif;
-            outline: none;
-            transition: all 0.3s;
-        }
-        .chat-input input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0,180,216,0.1);
-        }
-        .btn-send {
-            width: 46px; height: 46px;
-            border-radius: 14px;
-            border: none;
-            background: linear-gradient(135deg, #00b4d8, #0096c7);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-        .btn-send:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,180,216,0.35);
-        }
-        .btn-send:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* ===== FLOATING MENU ===== */
-        .fab {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 56px; height: 56px;
-            border-radius: 16px;
-            border: none;
-            background: linear-gradient(135deg, #e91e8c, #ff6b9d);
-            color: white;
-            font-size: 1.3rem;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(233,30,140,0.35);
-            transition: all 0.3s;
-            z-index: 50;
-        }
-        .fab:hover { transform: translateY(-3px) rotate(15deg); }
-        .fab-menu {
-            display: none;
-            position: fixed;
-            bottom: 90px;
-            right: 25px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-            padding: 8px;
-            z-index: 50;
-            width: 220px;
-            animation: popUp 0.3s ease;
-        }
-        @keyframes popUp {
-            from { opacity: 0; transform: translateY(10px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .fab-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            color: #333;
-            font-size: 0.88rem;
-            font-weight: 500;
-        }
-        .fab-menu-item:hover {
-            background: #f8f9ff;
-            color: var(--primary);
-            text-decoration: none;
-        }
-        .fab-menu-item i {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            color: white;
-        }
-        .fab-menu-item .icon-blue { background: linear-gradient(135deg, #00b4d8, #0096c7); }
-        .fab-menu-item .icon-pink { background: linear-gradient(135deg, #e91e8c, #ff6b9d); }
-        .fab-menu-item .icon-green { background: linear-gradient(135deg, #2dce89, #26c281); }
-
-        /* ===== OVERLAY FORMS ===== */
-        .overlay-form {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .overlay-form.active { display: flex; }
-        .form-card {
-            background: white;
-            border-radius: 24px;
-            padding: 35px 30px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            animation: popUp 0.3s ease;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .form-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        .form-card-header h3 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        .form-close {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            border: none;
-            background: #f5f5f5;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #666;
-            transition: all 0.2s;
-        }
-        .form-close:hover { background: #fee; color: #e53e3e; }
-        .form-card .form-group label {
-            font-weight: 500;
-            color: #444;
-            font-size: 0.85rem;
-        }
-        .form-card .form-control {
-            border: 2px solid #e8e8e8;
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            font-family: 'Poppins', sans-serif;
-        }
-        .form-card .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0,180,216,0.1);
-        }
-        .btn-form {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Poppins', sans-serif;
-        }
-        .btn-form.blue { background: linear-gradient(135deg, #00b4d8, #0096c7); }
-        .btn-form.pink { background: linear-gradient(135deg, #e91e8c, #ff6b9d); }
-        .btn-form:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-        .form-msg {
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            display: none;
-        }
-        .form-msg.success { background: #e6ffed; color: #2dce89; display: block; }
-        .form-msg.error { background: #fee; color: #e53e3e; display: block; }
-
-        /* Responsive - Tablette */
-        @media (max-width: 768px) {
-            .chat-wrapper { width: 100%; max-width: 100%; height: 90vh; border-radius: 16px; }
-            .sidebar { width: 280px; }
-            .fab-menu { width: 200px; }
-        }
-        /* Responsive - Mobile */
-        @media (max-width: 520px) {
-            .chat-wrapper { width: 100%; height: 100vh; border-radius: 0; }
-            body { padding: 0; }
-            .chat-header { padding: 14px 12px; }
-            .chat-header-info h4 { font-size: 0.9rem; }
-            .chat-messages { padding: 12px; }
-            .chat-input { padding: 10px 12px; }
-            .chat-input input { padding: 10px 14px; font-size: 0.85rem; }
-            .btn-send { width: 42px; height: 42px; }
-            .msg-bubble { max-width: 85%; font-size: 0.84rem; padding: 10px 14px; }
-            .sidebar { width: 260px; padding: 20px 15px; }
-            .fab { bottom: 15px; right: 15px; width: 48px; height: 48px; font-size: 1.1rem; }
-            .fab-menu { bottom: 75px; right: 15px; width: 190px; }
-            .fab-menu-item { padding: 10px 12px; font-size: 0.82rem; }
-            .form-card { padding: 25px 20px; border-radius: 18px; }
-        }
-        /* Responsive - Très petit écran */
-        @media (max-width: 360px) {
-            .msg-bubble { max-width: 90%; font-size: 0.82rem; }
-            .chat-header-info h4 { font-size: 0.85rem; }
-        }
-        /* Export buttons in history */
-        .history-export {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-        .history-export a {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: #f0f0f0;
-            color: #666;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .history-export a:hover {
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- SIDEBAR HISTORY -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fas fa-clock-rotate-left mr-2"></i>Historique</h3>
-            <button class="sidebar-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    <!-- HISTORIQUE -->
+    <aside class="chat-sidebar" id="sidebar" aria-label="Historique des conversations">
+        <div class="chat-sidebar-head">
+            <a class="brand" href="/">{% include '_logo.html' %}</a>
+            <button class="icon-btn menu-btn" onclick="closeSidebar()" aria-label="Fermer l'historique"><i class="fas fa-xmark"></i></button>
         </div>
-        <div id="historyList"></div>
-        <button class="btn-new-chat mt-3" onclick="startNewChat()">
-            <i class="fas fa-plus mr-2"></i>Nouveau chat
-        </button>
-    </div>
+        <div class="chat-sidebar-actions">
+            <button class="btn-soft btn-block-brand" onclick="startNewChat()">
+                <i class="fas fa-plus"></i>Nouvelle conversation
+            </button>
+        </div>
+        <div class="chat-sidebar-title">Historique</div>
+        <div class="history-list" id="historyList"></div>
+        <div class="chat-sidebar-foot">
+            <a class="sidebar-link" href="/profile"><i class="fas fa-user-gear"></i>Mon profil</a>
+            <a class="sidebar-link" href="/"><i class="fas fa-house"></i>Accueil</a>
+            <a class="sidebar-link danger" href="/logout"><i class="fas fa-right-from-bracket"></i>Déconnexion</a>
+        </div>
+    </aside>
+    <div class="sidebar-backdrop" onclick="closeSidebar()"></div>
 
-    <!-- CHAT CONTAINER -->
-    <div class="chat-wrapper">
-        <div class="chat-header">
-            <button class="header-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <div class="header-avatar"><i class="fas fa-robot"></i></div>
+    <!-- CONVERSATION -->
+    <main class="chat-main">
+        <header class="chat-header">
+            <button class="icon-btn menu-btn" onclick="openSidebar()" aria-label="Ouvrir l'historique"><i class="fas fa-bars"></i></button>
+            <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+                <rect class="bm-bg" width="48" height="48" rx="14"/>
+                <path class="bm-bubble" d="M15 11h18a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H22l-7 5.5V33a6 6 0 0 1-6-6V17a6 6 0 0 1 6-6z"/>
+                <path class="bm-heart" d="M24 29c-.35 0-.7-.13-.98-.38C19.9 25.9 17.5 23.8 17.5 21.2c0-1.95 1.5-3.45 3.35-3.45 1.3 0 2.45.7 3.15 1.8.7-1.1 1.85-1.8 3.15-1.8 1.85 0 3.35 1.5 3.35 3.45 0 2.6-2.4 4.7-5.52 7.42-.28.25-.63.38-.98.38z"/>
+            </svg>
             <div class="chat-header-info">
-                <h4>Assistant Santé</h4>
-                <span><i class="fas fa-circle" style="color:#2dce89;font-size:0.5rem;"></i> En ligne</span>
+                <h1>Assistante MamaBot</h1>
+                <span>En ligne</span>
             </div>
-            <a href="/" class="header-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;"><i class="fas fa-home"></i></a>
-        </div>
-
-        <div class="chat-messages" id="chatbox">
-            <div class="msg bot">
-                <div class="msg-avatar"><i class="fas fa-robot"></i></div>
-                <div class="msg-bubble">Bonjour ! Je suis votre assistant santé maternelle et infantile. Posez-moi vos questions sur la grossesse, les soins prénatals, postnataux, ou la nutrition des enfants.</div>
-            </div>
-        </div>
-
-        <div class="typing" id="typingIndicator">
-            <div class="msg bot">
-                <div class="msg-avatar"><i class="fas fa-robot"></i></div>
-                <div class="msg-bubble">
-                    <div class="typing-content">
-                        <div class="typing-dots"><span></span><span></span><span></span></div>
-                        <span class="typing-text">En train d'écrire...</span>
+            <div class="header-actions">
+                <button class="icon-btn hide-xs" onclick="openForm('reminderOverlay')" title="Configurer un rappel" aria-label="Configurer un rappel"><i class="fas fa-bell"></i></button>
+                <button class="icon-btn accent hide-xs" onclick="openForm('contactOverlay')" title="Contacter un conseiller" aria-label="Contacter un conseiller"><i class="fas fa-user-doctor"></i></button>
+                <div class="dropdown-wrap">
+                    <button class="icon-btn" id="moreBtn" onclick="toggleMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Plus d'options"><i class="fas fa-ellipsis-vertical"></i></button>
+                    <div class="menu-pop" id="moreMenu" role="menu">
+                        <button onclick="openForm('reminderOverlay')"><i class="fas fa-bell"></i>Configurer un rappel</button>
+                        <button onclick="openForm('contactOverlay')"><i class="fas fa-user-doctor"></i>Contacter un conseiller</button>
+                        <button onclick="startNewChat()"><i class="fas fa-plus"></i>Nouvelle conversation</button>
+                        <hr>
+                        <a href="/profile"><i class="fas fa-user-gear"></i>Mon profil</a>
+                        <a href="/"><i class="fas fa-house"></i>Retour à l'accueil</a>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="chat-input">
-            <input type="text" id="userInput" placeholder="Écrivez votre message..." onkeypress="if(event.key==='Enter')sendMessage()">
-            <button class="btn-send" id="sendBtn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <!-- FAB MENU -->
-    <button class="fab" onclick="toggleFab()"><i class="fas fa-ellipsis-vertical"></i></button>
-    <div class="fab-menu" id="fabMenu">
-        <div class="fab-menu-item" onclick="openForm('reminderOverlay')">
-            <i class="icon-blue fas fa-bell"></i>
-            Configurer un rappel
-        </div>
-        <div class="fab-menu-item" onclick="openForm('contactOverlay')">
-            <i class="icon-pink fas fa-user-doctor"></i>
-            Contacter un conseiller
-        </div>
-        <a class="fab-menu-item" href="/profile">
-            <i class="icon-blue fas fa-user-cog"></i>
-            Mon profil
-        </a>
-        <a class="fab-menu-item" href="/">
-            <i class="icon-green fas fa-home"></i>
-            Retour à l'accueil
-        </a>
-    </div>
-
-    <!-- REMINDER FORM OVERLAY -->
-    <div class="overlay-form" id="reminderOverlay">
-        <div class="form-card">
-            <div class="form-card-header">
-                <h3><i class="fas fa-bell mr-2" style="color:var(--primary)"></i>Configurer un Rappel</h3>
-                <button class="form-close" onclick="closeForm('reminderOverlay')"><i class="fas fa-times"></i></button>
+        <div class="chat-messages" id="chatScroll">
+            <div class="chat-thread" id="chatbox"></div>
+            <div class="chat-thread mt-3">
+                <div class="msg bot typing" id="typingIndicator" aria-live="polite">
+                    <div class="msg-avatar"></div>
+                    <div class="msg-bubble"><div class="typing-dots" aria-label="MamaBot écrit"><span></span><span></span><span></span></div></div>
+                </div>
             </div>
-            <form id="reminderForm">
-                <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" class="form-control" id="rName" placeholder="Votre nom">
-                </div>
-                <div class="form-group">
-                    <label>Numéro de téléphone</label>
-                    <input type="tel" class="form-control" id="rPhone" placeholder="+226...">
-                </div>
-                <div class="form-group">
-                    <label>Type de visite</label>
-                    <select class="form-control" id="rType">
-                        <option value="prénatale">Visite prénatale</option>
-                        <option value="postnatale">Visite postnatale</option>
-                        <option value="vaccination">Vaccination</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date du rendez-vous</label>
+        </div>
+
+        <div class="chat-composer">
+            <div class="composer-box">
+                <textarea id="userInput" rows="1" placeholder="Écrivez votre question..." aria-label="Votre message"></textarea>
+                <button class="btn-send" id="sendBtn" onclick="sendMessage()" aria-label="Envoyer"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <p class="composer-note">MamaBot donne des conseils généraux. En cas d'urgence, rendez-vous au centre de santé le plus proche.</p>
+        </div>
+    </main>
+</div>
+
+<!-- RAPPEL -->
+<div class="overlay-form" id="reminderOverlay" role="dialog" aria-modal="true" aria-labelledby="reminderTitle">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2 id="reminderTitle"><span class="panel-icon"><i class="fas fa-bell"></i></span>Configurer un rappel</h2>
+            <button class="icon-btn" onclick="closeForm('reminderOverlay')" aria-label="Fermer"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form id="reminderForm" onsubmit="event.preventDefault(); submitReminder();">
+            <div class="form-group">
+                <label for="rName">Nom</label>
+                <input type="text" class="form-control" id="rName" placeholder="Votre nom" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label for="rPhone">Numéro de téléphone</label>
+                <input type="tel" class="form-control" id="rPhone" placeholder="+226..." autocomplete="tel">
+            </div>
+            <div class="form-group">
+                <label for="rType">Type de visite</label>
+                <select class="form-control" id="rType">
+                    <option value="prénatale">Visite prénatale</option>
+                    <option value="postnatale">Visite postnatale</option>
+                    <option value="vaccination">Vaccination</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-sm-6">
+                    <label for="rDate">Date du rendez-vous</label>
                     <input type="date" class="form-control" id="rDate">
                 </div>
-                <div class="form-group">
-                    <label>Heure de notification</label>
+                <div class="form-group col-sm-6">
+                    <label for="rTime">Heure de notification</label>
                     <input type="time" class="form-control" id="rTime">
                 </div>
-                <button type="button" class="btn-form blue" onclick="submitReminder()">
-                    <i class="fas fa-check mr-2"></i>Enregistrer le rappel
-                </button>
-            </form>
-            <div class="form-msg" id="reminderMsg"></div>
-        </div>
-    </div>
-
-    <!-- CONTACT FORM OVERLAY -->
-    <div class="overlay-form" id="contactOverlay">
-        <div class="form-card">
-            <div class="form-card-header">
-                <h3><i class="fas fa-user-doctor mr-2" style="color:var(--secondary)"></i>Contacter un Conseiller</h3>
-                <button class="form-close" onclick="closeForm('contactOverlay')"><i class="fas fa-times"></i></button>
             </div>
-            <form id="contactForm">
-                <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" class="form-control" id="cName" placeholder="Votre nom" required>
-                </div>
-                <div class="form-group">
-                    <label>Téléphone</label>
-                    <input type="text" class="form-control" id="cPhone" placeholder="+226..." required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" class="form-control" id="cEmail" placeholder="votre@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label>Message</label>
-                    <textarea class="form-control" id="cMessage" rows="3" placeholder="Décrivez votre besoin..." required></textarea>
-                </div>
-                <button type="button" class="btn-form pink" onclick="submitContact()">
-                    <i class="fas fa-paper-plane mr-2"></i>Envoyer le message
-                </button>
-            </form>
-            <div class="form-msg" id="contactMsg"></div>
-        </div>
+            <button type="submit" class="btn-brand btn-block-brand">
+                <i class="fas fa-check"></i>Enregistrer le rappel
+            </button>
+        </form>
+        <div class="form-msg" id="reminderMsg" role="status"></div>
     </div>
+</div>
 
-    <script>
-        function escapeHtml(t) {
-            const d = document.createElement('div');
-            d.textContent = t;
-            return d.innerHTML;
-        }
+<!-- CONSEILLER -->
+<div class="overlay-form" id="contactOverlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2 id="contactTitle"><span class="panel-icon accent"><i class="fas fa-user-doctor"></i></span>Contacter un conseiller</h2>
+            <button class="icon-btn" onclick="closeForm('contactOverlay')" aria-label="Fermer"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form id="contactForm" onsubmit="event.preventDefault(); submitContact();">
+            <div class="form-group">
+                <label for="cName">Nom</label>
+                <input type="text" class="form-control" id="cName" placeholder="Votre nom" autocomplete="name" required>
+            </div>
+            <div class="form-group">
+                <label for="cPhone">Téléphone</label>
+                <input type="tel" class="form-control" id="cPhone" placeholder="+226..." autocomplete="tel" required>
+            </div>
+            <div class="form-group">
+                <label for="cEmail">E-mail</label>
+                <input type="email" class="form-control" id="cEmail" placeholder="votre@email.com" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+                <label for="cMessage">Message</label>
+                <textarea class="form-control" id="cMessage" rows="3" placeholder="Décrivez votre besoin..." required></textarea>
+            </div>
+            <button type="submit" class="btn-accent btn-block-brand">
+                <i class="fas fa-paper-plane"></i>Envoyer le message
+            </button>
+        </form>
+        <div class="form-msg" id="contactMsg" role="status"></div>
+    </div>
+</div>
+{% endblock %}
 
-        // === CHAT ===
-        function sendMessage() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if (!text) return;
+{% block scripts %}
+<script>
+    const chatbox = document.getElementById('chatbox');
+    const chatScroll = document.getElementById('chatScroll');
+    const input = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const typing = document.getElementById('typingIndicator');
+    const BOT_AVATAR = document.querySelector('.chat-header .brand-mark').outerHTML;
+    const SUGGESTIONS = [
+        'Quels aliments privilégier pendant la grossesse ?',
+        'Quand faire les visites prénatales ?',
+        'Quel est le calendrier de vaccination de bébé ?',
+        "Comment réussir l'allaitement ?"
+    ];
+    const desktop = window.matchMedia('(min-width: 992px)');
+    typing.querySelector('.msg-avatar').innerHTML = BOT_AVATAR;
 
-            const chatbox = document.getElementById('chatbox');
-            chatbox.innerHTML += '<div class="msg user"><div class="msg-avatar"><i class="fas fa-user"></i></div><div class="msg-bubble">' + escapeHtml(text) + '</div></div>';
-            input.value = '';
-            chatbox.scrollTop = chatbox.scrollHeight;
+    function escapeHtml(t) {
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+    }
+    function scrollToBottom() {
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+    }
+    function addMessage(sender, text, isError) {
+        const avatar = sender === 'bot' ? BOT_AVATAR : '<i class="fas fa-user"></i>';
+        chatbox.insertAdjacentHTML('beforeend',
+            '<div class="msg ' + sender + (isError ? ' error' : '') + '">'
+            + '<div class="msg-avatar">' + avatar + '</div>'
+            + '<div class="msg-bubble">' + escapeHtml(text) + '</div></div>');
+        scrollToBottom();
+    }
+    function showWelcome(text) {
+        chatbox.innerHTML = '';
+        addMessage('bot', text);
+        const wrap = document.createElement('div');
+        wrap.className = 'suggestions';
+        wrap.id = 'suggestions';
+        SUGGESTIONS.forEach(q => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'suggestion';
+            b.textContent = q;
+            b.onclick = () => { input.value = q; sendMessage(); };
+            wrap.appendChild(b);
+        });
+        chatbox.appendChild(wrap);
+    }
 
-            document.getElementById('typingIndicator').style.display = 'block';
-            document.getElementById('sendBtn').disabled = true;
+    // === CHAT ===
+    function autoGrow() {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+    }
+    input.addEventListener('input', autoGrow);
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
 
-            fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: text})
-            })
-            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-            .then(data => {
-                document.getElementById('typingIndicator').style.display = 'none';
-                document.getElementById('sendBtn').disabled = false;
-                chatbox.innerHTML += '<div class="msg bot"><div class="msg-avatar"><i class="fas fa-robot"></i></div><div class="msg-bubble">' + escapeHtml(data.message) + '</div></div>';
-                chatbox.scrollTop = chatbox.scrollHeight;
-            })
-            .catch(() => {
-                document.getElementById('typingIndicator').style.display = 'none';
-                document.getElementById('sendBtn').disabled = false;
-                chatbox.innerHTML += '<div class="msg bot"><div class="msg-avatar"><i class="fas fa-robot"></i></div><div class="msg-bubble" style="color:#e53e3e;">Une erreur est survenue. Veuillez réessayer.</div></div>';
-                chatbox.scrollTop = chatbox.scrollHeight;
-            });
-        }
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text || sendBtn.disabled) return;
 
-        // === SIDEBAR ===
-        let historyPage = 1;
-        let historyTotalPages = 1;
+        const sugg = document.getElementById('suggestions');
+        if (sugg) sugg.remove();
+        addMessage('user', text);
+        input.value = '';
+        autoGrow();
 
-        function toggleSidebar() {
-            const s = document.getElementById('sidebar');
-            if (s.style.display === 'block') { s.style.display = 'none'; }
-            else { s.style.display = 'block'; historyPage = 1; loadHistory(true); }
-        }
-        function loadHistory(reset) {
-            fetch('/get_history?page=' + historyPage + '&per_page=20').then(r => r.json()).then(data => {
-                const list = document.getElementById('historyList');
-                if (reset) list.innerHTML = '';
-                // Supprimer le bouton "Charger plus" existant
-                const oldBtn = document.getElementById('loadMoreBtn');
-                if (oldBtn) oldBtn.remove();
+        typing.classList.add('show');
+        sendBtn.disabled = true;
+        scrollToBottom();
 
-                if (data.history && data.history.length > 0) {
-                    data.history.forEach(c => {
-                        const el = document.createElement('div');
-                        el.className = 'history-item';
-                        el.innerHTML = '<strong>' + escapeHtml(c.title) + '</strong><small>' + escapeHtml(c.date) + '</small>'
-                            + '<div class="history-export">'
-                            + '<a href="/export_chat/' + c.id + '?format=txt" title="Exporter en texte" onclick="event.stopPropagation()"><i class="fas fa-file-lines"></i> TXT</a>'
-                            + '<a href="/export_chat/' + c.id + '?format=pdf" title="Exporter en PDF" onclick="event.stopPropagation()"><i class="fas fa-file-pdf"></i> PDF</a>'
-                            + '</div>';
-                        el.onclick = () => loadChat(c.id);
-                        list.appendChild(el);
-                    });
-                    historyTotalPages = data.total_pages || 1;
-                    if (historyPage < historyTotalPages) {
-                        const btn = document.createElement('button');
-                        btn.id = 'loadMoreBtn';
-                        btn.textContent = 'Charger plus...';
-                        btn.style.cssText = 'width:100%;padding:10px;border:none;background:#f0f0f0;color:#00b4d8;font-weight:600;cursor:pointer;border-radius:8px;margin-top:8px;';
-                        btn.onclick = () => { historyPage++; loadHistory(false); };
-                        list.appendChild(btn);
-                    }
-                } else if (reset) {
-                    list.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Aucun historique</p>';
-                }
-            }).catch(() => {});
-        }
-        function loadChat(id) {
-            fetch('/get_chat/' + id).then(r => r.json()).then(data => {
-                const chatbox = document.getElementById('chatbox');
-                chatbox.innerHTML = '';
-                data.messages.forEach(m => {
-                    const cls = m.user === 'Bot' ? 'bot' : 'user';
-                    const icon = m.user === 'Bot' ? 'fa-robot' : 'fa-user';
-                    chatbox.innerHTML += '<div class="msg ' + cls + '"><div class="msg-avatar"><i class="fas ' + icon + '"></i></div><div class="msg-bubble">' + escapeHtml(m.text) + '</div></div>';
+        fetch('/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: text})
+        })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(data => addMessage('bot', data.message))
+        .catch(() => addMessage('bot', 'Une erreur est survenue. Veuillez réessayer.', true))
+        .finally(() => {
+            typing.classList.remove('show');
+            sendBtn.disabled = false;
+            if (desktop.matches) input.focus();
+        });
+    }
+
+    // === HISTORIQUE ===
+    let historyPage = 1;
+    let historyTotalPages = 1;
+
+    function openSidebar() {
+        document.body.classList.add('sidebar-open');
+        historyPage = 1;
+        loadHistory(true);
+    }
+    function closeSidebar() {
+        document.body.classList.remove('sidebar-open');
+    }
+    function loadHistory(reset) {
+        fetch('/get_history?page=' + historyPage + '&per_page=20').then(r => r.json()).then(data => {
+            const list = document.getElementById('historyList');
+            if (reset) list.innerHTML = '';
+            const oldBtn = document.getElementById('loadMoreBtn');
+            if (oldBtn) oldBtn.remove();
+
+            if (data.history && data.history.length > 0) {
+                data.history.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = 'history-item';
+                    el.innerHTML = '<strong>' + escapeHtml(c.title) + '</strong><small>' + escapeHtml(c.date) + '</small>'
+                        + '<div class="history-export">'
+                        + '<a href="/export_chat/' + c.id + '?format=txt" title="Exporter en texte" onclick="event.stopPropagation()"><i class="fas fa-file-lines"></i> TXT</a>'
+                        + '<a href="/export_chat/' + c.id + '?format=pdf" title="Exporter en PDF" onclick="event.stopPropagation()"><i class="fas fa-file-pdf"></i> PDF</a>'
+                        + '</div>';
+                    el.onclick = () => loadChat(c.id);
+                    list.appendChild(el);
                 });
-                chatbox.scrollTop = chatbox.scrollHeight;
-                toggleSidebar();
-            }).catch(() => {});
-        }
-        function startNewChat() {
-            fetch('/new_chat', {method: 'POST'}).catch(() => {});
-            document.getElementById('chatbox').innerHTML = '<div class="msg bot"><div class="msg-avatar"><i class="fas fa-robot"></i></div><div class="msg-bubble">Bonjour ! Comment puis-je vous aider ?</div></div>';
-            toggleSidebar();
-        }
-
-        // === FAB ===
-        function toggleFab() {
-            const m = document.getElementById('fabMenu');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // === OVERLAYS ===
-        function openForm(id) {
-            document.getElementById(id).classList.add('active');
-            document.getElementById('fabMenu').style.display = 'none';
-        }
-        function closeForm(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        // === REMINDER ===
-        function submitReminder() {
-            const name = document.getElementById('rName').value;
-            const phone = document.getElementById('rPhone').value;
-            const type = document.getElementById('rType').value;
-            const date = document.getElementById('rDate').value;
-            const time = document.getElementById('rTime').value;
-            const msg = document.getElementById('reminderMsg');
-
-            if (!type || !date || !phone) {
-                msg.className = 'form-msg error'; msg.textContent = 'Veuillez remplir tous les champs obligatoires.'; return;
+                historyTotalPages = data.total_pages || 1;
+                if (historyPage < historyTotalPages) {
+                    const btn = document.createElement('button');
+                    btn.id = 'loadMoreBtn';
+                    btn.className = 'btn-load-more';
+                    btn.textContent = 'Charger plus...';
+                    btn.onclick = () => { historyPage++; loadHistory(false); };
+                    list.appendChild(btn);
+                }
+            } else if (reset) {
+                list.innerHTML = '<div class="history-empty"><i class="fas fa-comments"></i>Aucune conversation pour le moment</div>';
             }
-            fetch('/set_reminder', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name, type, date, time, phone})
-            }).then(r => r.json()).then(data => {
-                msg.className = 'form-msg success'; msg.textContent = data.message;
-                document.getElementById('reminderForm').reset();
-            }).catch(() => {
-                msg.className = 'form-msg error'; msg.textContent = 'Erreur. Veuillez réessayer.';
-            });
+        }).catch(() => {});
+    }
+    function loadChat(id) {
+        fetch('/get_chat/' + id).then(r => r.json()).then(data => {
+            chatbox.innerHTML = '';
+            data.messages.forEach(m => addMessage(m.user === 'Bot' ? 'bot' : 'user', m.text));
+            closeSidebar();
+        }).catch(() => {});
+    }
+    function startNewChat() {
+        fetch('/new_chat', {method: 'POST'})
+            .then(() => { if (desktop.matches) { historyPage = 1; loadHistory(true); } })
+            .catch(() => {});
+        showWelcome('Bonjour ! Comment puis-je vous aider ?');
+        closeSidebar();
+        closeMenu();
+    }
+
+    // === MENU ===
+    function toggleMenu(e) {
+        e.stopPropagation();
+        const open = document.getElementById('moreMenu').classList.toggle('open');
+        document.getElementById('moreBtn').setAttribute('aria-expanded', open);
+    }
+    function closeMenu() {
+        document.getElementById('moreMenu').classList.remove('open');
+        document.getElementById('moreBtn').setAttribute('aria-expanded', 'false');
+    }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.dropdown-wrap')) closeMenu();
+    });
+
+    // === FENÊTRES ===
+    function openForm(id) {
+        document.getElementById(id).classList.add('active');
+        closeMenu();
+    }
+    function closeForm(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    document.querySelectorAll('.overlay-form').forEach(el => {
+        el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.overlay-form.active').forEach(el => el.classList.remove('active'));
+        closeMenu();
+        closeSidebar();
+    });
+
+    // === RAPPEL ===
+    function submitReminder() {
+        const name = document.getElementById('rName').value;
+        const phone = document.getElementById('rPhone').value;
+        const type = document.getElementById('rType').value;
+        const date = document.getElementById('rDate').value;
+        const time = document.getElementById('rTime').value;
+        const msg = document.getElementById('reminderMsg');
+
+        if (!type || !date || !phone) {
+            msg.className = 'form-msg error'; msg.textContent = 'Veuillez remplir tous les champs obligatoires.'; return;
         }
-
-        // === CONTACT ===
-        function submitContact() {
-            const name = document.getElementById('cName').value;
-            const phone_number = document.getElementById('cPhone').value;
-            const email = document.getElementById('cEmail').value;
-            const message = document.getElementById('cMessage').value;
-            const msg = document.getElementById('contactMsg');
-
-            if (!name || !phone_number || !email || !message) {
-                msg.className = 'form-msg error'; msg.textContent = 'Veuillez remplir tous les champs.'; return;
-            }
-            fetch('/contact_advisor', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({phone_number, name, email, message})
-            }).then(r => r.json()).then(data => {
-                msg.className = 'form-msg success'; msg.textContent = data.message || 'Message envoyé !';
-                document.getElementById('contactForm').reset();
-            }).catch(() => {
-                msg.className = 'form-msg error'; msg.textContent = 'Erreur. Veuillez réessayer.';
-            });
-        }
-
-        // Close overlays on backdrop click
-        document.querySelectorAll('.overlay-form').forEach(el => {
-            el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
+        fetch('/set_reminder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, type, date, time, phone})
+        }).then(r => r.json()).then(data => {
+            msg.className = 'form-msg success'; msg.textContent = data.message;
+            document.getElementById('reminderForm').reset();
+        }).catch(() => {
+            msg.className = 'form-msg error'; msg.textContent = 'Erreur. Veuillez réessayer.';
         });
-        // Close fab menu on outside click
-        document.addEventListener('click', e => {
-            if (!e.target.closest('.fab') && !e.target.closest('.fab-menu')) {
-                document.getElementById('fabMenu').style.display = 'none';
-            }
+    }
+
+    // === CONSEILLER ===
+    function submitContact() {
+        const name = document.getElementById('cName').value;
+        const phone_number = document.getElementById('cPhone').value;
+        const email = document.getElementById('cEmail').value;
+        const message = document.getElementById('cMessage').value;
+        const msg = document.getElementById('contactMsg');
+
+        if (!name || !phone_number || !email || !message) {
+            msg.className = 'form-msg error'; msg.textContent = 'Veuillez remplir tous les champs.'; return;
+        }
+        fetch('/contact_advisor', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({phone_number, name, email, message})
+        }).then(r => r.json()).then(data => {
+            msg.className = 'form-msg success'; msg.textContent = data.message || 'Message envoyé !';
+            document.getElementById('contactForm').reset();
+        }).catch(() => {
+            msg.className = 'form-msg error'; msg.textContent = 'Erreur. Veuillez réessayer.';
         });
-    </script>
-</body>
-</html>
+    }
+
+    // === DÉMARRAGE ===
+    showWelcome("Bonjour ! Je suis MamaBot, votre assistante santé maternelle et infantile. Posez-moi vos questions sur la grossesse, les soins prénatals et postnataux, ou la nutrition des enfants.");
+    if (desktop.matches) loadHistory(true);
+</script>
+{% endblock %}

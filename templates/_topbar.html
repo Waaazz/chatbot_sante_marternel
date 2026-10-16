@@ -1,0 +1,12 @@
+<header class="topbar">
+    <div class="container topbar-inner">
+        <a class="brand" href="/" aria-label="MamaBot BF — Accueil">{% include '_logo.html' %}</a>
+        <nav class="topbar-links">
+            <a href="/ask" class="{{ 'active' if request.path == '/ask' }}"><i class="fas fa-comments"></i><span>Chatbot</span></a>
+            {% if session.get('user_id') %}
+            <a href="/profile" class="{{ 'active' if request.path == '/profile' }}"><i class="fas fa-user-circle"></i><span>Profil</span></a>
+            {% endif %}
+            <a href="/"><i class="fas fa-home"></i><span>Accueil</span></a>
+        </nav>
+    </div>
+</header>
