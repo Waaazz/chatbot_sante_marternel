@@ -1013,3 +1013,14 @@ select.form-control { appearance: none; -webkit-appearance: none; padding-right:
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .fade-up { opacity: 1; transform: none; }
 }
+
+/* ---------- PWA : bouton d'installation ---------- */
+.pwa-install {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 1050;
+    box-shadow: 0 8px 20px rgba(15, 118, 110, .3);
+}
+.pwa-install[hidden] { display: none; }
+@media (display-mode: standalone) { .pwa-install { display: none; } }

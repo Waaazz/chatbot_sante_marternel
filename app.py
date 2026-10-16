@@ -139,6 +139,31 @@ def home():
     return render_template('index.html')
 
 
+# PWA : le service worker et le manifeste sont servis à la racine pour couvrir tout le site
+@app.route('/sw.js')
+@limiter.exempt
+def service_worker():
+    response = app.send_static_file('sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
+
+
+@app.route('/manifest.webmanifest')
+@limiter.exempt
+def web_manifest():
+    response = app.send_static_file('manifest.webmanifest')
+    response.headers['Content-Type'] = 'application/manifest+json'
+    return response
+
+
+@app.route('/offline')
+@limiter.exempt
+def offline():
+    return render_template('offline.html')
+
+
 # Route pour afficher la page d'inscription
 @app.route('/register', methods=['GET'])
 def show_register_form():

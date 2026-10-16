@@ -13,6 +13,36 @@ os.environ['SECRET_KEY'] = 'test-secret-key-for-testing-only'
 os.environ['MONGO_URI'] = 'mongodb://localhost:27017/chatbot_test'
 
 
+class TestPWA:
+    """Tests pour les fichiers de la Progressive Web App."""
+
+    def test_service_worker(self, client):
+        """Le service worker est servi à la racine avec le bon type."""
+        response = client.get('/sw.js')
+        assert response.status_code == 200
+        assert response.headers['Content-Type'].startswith('application/javascript')
+        assert response.headers['Service-Worker-Allowed'] == '/'
+
+    def test_manifest(self, client):
+        """Le manifeste est un JSON valide avec les icônes requises."""
+        response = client.get('/manifest.webmanifest')
+        assert response.status_code == 200
+        assert response.headers['Content-Type'].startswith('application/manifest+json')
+        manifest = response.get_json(force=True)
+        sizes = {icon['sizes'] for icon in manifest['icons']}
+        assert {'192x192', '512x512'} <= sizes
+        assert manifest['display'] == 'standalone'
+
+    def test_offline_page(self, client):
+        response = client.get('/offline')
+        assert response.status_code == 200
+        assert 'hors connexion' in response.get_data(as_text=True)
+
+    def test_manifest_linked_in_pages(self, client):
+        response = client.get('/')
+        assert b'rel="manifest"' in response.data
+
+
 class TestPublicRoutes:
     """Tests pour les routes publiques (sans authentification)."""
 
