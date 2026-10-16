@@ -6,6 +6,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime
 from bson import ObjectId
+from werkzeug.security import generate_password_hash
 import os
 
 # Variables d'environnement pour les tests
@@ -236,6 +237,25 @@ class TestAdminRoutes:
         }
         response = logged_in_client.get('/admin', follow_redirects=False)
         assert response.status_code == 302
+
+
+class TestLoginRedirect:
+    """Après connexion, l'utilisateur arrive directement sur le chat."""
+
+    @patch('app.users_collection')
+    def test_user_goes_to_chat(self, mock_users, client):
+        mock_users.find_one.return_value = {
+            '_id': ObjectId('507f1f77bcf86cd799439011'), 'username': 'awa',
+            'password': generate_password_hash('motdepasse1'), 'confirmed': True,
+        }
+        response = client.post('/login', data={'username': 'awa', 'password': 'motdepasse1'})
+        assert response.status_code == 302
+        assert response.headers['Location'].endswith('/ask')
+
+    def test_pwa_start_goes_to_chat_when_logged_in(self, logged_in_client):
+        response = logged_in_client.get('/?source=pwa')
+        assert response.status_code == 302
+        assert response.headers['Location'].endswith('/ask')
 
 
 class TestHistoryAPI:

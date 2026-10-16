@@ -136,6 +136,9 @@ def admin_required(f):
 # Route simple pour afficher la page d'accueil
 @app.route('/')
 def home():
+    # Ouverture depuis l'application installée : aller directement au chat si connecté
+    if request.args.get('source') == 'pwa' and session.get('user_id'):
+        return redirect(url_for('show_ask_form'))
     return render_template('index.html')
 
 
@@ -270,7 +273,7 @@ def login():
         session.permanent = True
         logger.info("Connexion réussie : %s", username)
         flash('Connexion réussie', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('show_ask_form'))
     else:
         logger.warning("Tentative de connexion échouée pour : %s", username)
         flash('Nom d\'utilisateur ou mot de passe incorrect', 'error')
