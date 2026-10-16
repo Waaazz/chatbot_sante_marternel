@@ -44,6 +44,14 @@ class TestPWA:
         assert b'rel="manifest"' in response.data
 
 
+class TestHealth:
+    def test_health(self, client):
+        """La route de disponibilité répond sans toucher à la base."""
+        response = client.get('/health')
+        assert response.status_code == 200
+        assert response.get_json() == {'status': 'ok'}
+
+
 class TestPublicRoutes:
     """Tests pour les routes publiques (sans authentification)."""
 

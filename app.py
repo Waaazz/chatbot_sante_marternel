@@ -133,6 +133,14 @@ def admin_required(f):
     return decorated_function
 
 
+# Vérification de disponibilité : appelée régulièrement par un service externe
+# (UptimeRobot…) pour empêcher Render de mettre l'application en veille
+@app.route('/health')
+@limiter.exempt
+def health():
+    return jsonify(status='ok')
+
+
 # Route simple pour afficher la page d'accueil
 @app.route('/')
 def home():
